@@ -6,8 +6,8 @@ services:
     environment:
       - NODE_ENV=development
     volumes:
-      - ./:/usr/src/anagramee_front
-    command: sh -c 'cd app && yarn start'
+      - ./app/:/usr/src/anagramee_front
+    command: yarn start
     ports:
       - "3000:3000"
     tty: true
