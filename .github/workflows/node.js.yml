@@ -9,10 +9,6 @@ on:
   pull_request:
     branches: [ develop ]
 
-defaults:
-  run:
-    working-directory: ./front/app
-
 jobs:
   build:
     runs-on: ubuntu-latest
