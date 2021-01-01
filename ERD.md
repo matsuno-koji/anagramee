@@ -34,7 +34,6 @@ package "アナグラム集約" as anagram_aggregates {
     + theme_anagram_id [CPK, FK]
     + tag_id [CPK, FK]
   }
-
 }
 
 package "タグ" as anagrams_tags {
@@ -43,14 +42,26 @@ package "タグ" as anagrams_tags {
     ==
     name: varchar(255)
   }
-
-  /'リレーション'/
-  users ||--o{ theme_anagrams
-  users ||--o{ posted_anagrams
-  theme_anagrams ||--o{ posted_anagrams
-  theme_anagrams ||--o{ theme_anagram_tags
-  tags ||--o{ theme_anagram_tags
 }
+
+package "お気に入り" as favorite_aggregates {
+   entity "お題アナグラムファボ" as theme_anagram_favorites <<I, INTER_MARK_COLOR>> {
+     + user_id [CPK, FK]
+     + theme_anagram_id [CPK, FK]
+   }
+
+   entity "投稿アナグラムファボ" as posted_anagram_favorites <<I, INTER_MARK_COLOR>> {
+     + user_id [CPK, FK]
+     + posted_anagram_id [CPK, FK]
+   }
+}
+
+/'リレーション'/
+users ||--o{ theme_anagrams
+users ||--o{ posted_anagrams
+theme_anagrams ||--o{ posted_anagrams
+theme_anagrams ||--o{ theme_anagram_tags
+tags ||--o{ theme_anagram_tags
 
 @enduml
 ```
