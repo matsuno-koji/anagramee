@@ -1,6 +1,7 @@
 import React, { useState } from "react"
 import { WordPanel } from "./wordpanel"
 import { WordPanelElement } from "../../types/editor"
+import { Preview } from "../editor/preview"
 import {
   GridContextProvider,
   GridDropZone,
@@ -20,6 +21,7 @@ interface Props {
 export const Editor: React.FC<Props> = (props) => {
   const elements = initialize(props.text)
   const [list, setList] = useState(elements)
+  const [text, setText] = useState(props.text)
 
   const onChange = (
     sourceId: string,
@@ -28,21 +30,27 @@ export const Editor: React.FC<Props> = (props) => {
   ) => {
     const nextState = swap(list, sourceIndex, targetIndex)
     setList(nextState)
+    console.log(joinText(nextState))
+    setText(joinText(nextState))
+    console.log(text)
   }
 
   return(
-    <GridContextProvider onChange={onChange}>
-      <GridDropZone 
-        id='editor'
-        {...props.editorConf}
-      >
-        {list.map(element => (
-          <GridItem key={element.key}>
-            <WordPanel element={element} />
-          </GridItem>
-        ))}
-      </GridDropZone>
-    </GridContextProvider>
+    <>
+      <GridContextProvider onChange={onChange}>
+        <GridDropZone 
+          id='editor'
+          {...props.editorConf}
+        >
+          {list.map(element => (
+            <GridItem key={element.key}>
+              <WordPanel element={element} />
+            </GridItem>
+          ))}
+        </GridDropZone>
+      </GridContextProvider>
+      <Preview text={text} boxesPerRow={props.editorConf.boxesPerRow} />
+    </>
   )
 }
 
@@ -56,7 +64,7 @@ function initialize(text: string): WordPanelElement[] {
   return elements
 }
 
-//使わない部分へ
+//使わない部分へスペースを追加
 function addSpace(text: string): string {
   const length = text.length
   const limit = 50
@@ -66,4 +74,13 @@ function addSpace(text: string): string {
     newString = newString + "　"
   }
   return newString
+}
+
+//入れ替えたテキストを合体
+function joinText(elements: WordPanelElement[]): string {
+  let text = ""
+  elements.map((element) => (
+    text = text + element.word
+  ))
+  return text
 }
