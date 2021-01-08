@@ -7,6 +7,7 @@ import {
   GridDropZone,
   GridItem,
   swap,
+  move
 } from "react-grid-dnd"
 
 interface Props {
@@ -18,33 +19,92 @@ interface Props {
   }
 }
 
+interface Lines {
+  [index: string]: WordPanelElement[]
+}
+
 export const Editor: React.FC<Props> = (props) => {
-  const elements = initialize(props.text)
-  const [list, setList] = useState(elements)
+  const lines = initialize(props.text, props.editorConf.boxesPerRow)
+  const [items, setItems] = useState(lines)
   const [text, setText] = useState(props.text)
 
   const onChange = (
     sourceId: string,
     sourceIndex: number,
     targetIndex: number,
+    targetId?: string
   ) => {
-    const nextState = swap(list, sourceIndex, targetIndex)
-    setList(nextState)
-    console.log(joinText(nextState))
-    setText(joinText(nextState))
-    console.log(text)
+    if (targetId) {
+      const result = move(
+        items[sourceId],
+        items[targetId],
+        sourceIndex,
+        targetIndex
+      );
+      return setItems({
+        ...items,
+        [sourceId]: result[0],
+        [targetId]: result[1]
+      })
+    }
+    const result = swap(items[sourceId], sourceIndex, targetIndex)
+    return setItems({
+      ...items,
+      [sourceId]: result
+    })
+    // setText(joinText(nextState))
   }
 
   return(
     <>
       <GridContextProvider onChange={onChange}>
         <GridDropZone 
-          id='editor'
+          id='one'
           {...props.editorConf}
         >
-          {list.map(element => (
-            <GridItem key={element.key}>
-              <WordPanel element={element} />
+          {items.one.map((item) => (
+            <GridItem key={item.key}>
+              <WordPanel element={item} />
+            </GridItem>
+          ))}
+        </GridDropZone>
+        <GridDropZone 
+          id='two'
+          {...props.editorConf}
+        >
+          {items.two.map((item) => (
+            <GridItem key={item.key}>
+              <WordPanel element={item} />
+            </GridItem>
+          ))}
+        </GridDropZone>
+        <GridDropZone 
+          id='three'
+          {...props.editorConf}
+        >
+          {items.three.map((item) => (
+            <GridItem key={item.key}>
+              <WordPanel element={item} />
+            </GridItem>
+          ))}
+        </GridDropZone>
+        <GridDropZone 
+          id='four'
+          {...props.editorConf}
+        >
+          {items.four.map((item) => (
+            <GridItem key={item.key}>
+              <WordPanel element={item} />
+            </GridItem>
+          ))}
+        </GridDropZone>
+        <GridDropZone 
+          id='five'
+          {...props.editorConf}
+        >
+          {items.five.map((item) => (
+            <GridItem key={item.key}>
+              <WordPanel element={item} />
             </GridItem>
           ))}
         </GridDropZone>
@@ -55,25 +115,37 @@ export const Editor: React.FC<Props> = (props) => {
 }
 
 //文章の初期化
-function initialize(text: string): WordPanelElement[] {
-  const spaceAddedText = addSpace(text)
-  const words = spaceAddedText.split("")
+function initialize(text: string, boxesPerRow: number): Lines {
+  const words = text.split("")
   const elements = words.map( (word, index) => {
-    return {key: `${index}`, word: `${word}`}
+    const line = Math.floor(index / boxesPerRow)
+    return {key: `${index}`, word: `${word}`, line: line}
   })
-  return elements
+  const lines = devideLine(elements)
+  return lines
 }
 
-//使わない部分へスペースを追加
-function addSpace(text: string): string {
-  const length = text.length
-  const limit = 50
-  const diff = limit - length
-  let newString = text
-  for (let num = 0; num < diff; num++) {
-    newString = newString + "　"
+//ラインでグループ分け
+function devideLine(elements: WordPanelElement[]): Lines {
+  const words_one = extractTargetLineWords(elements, 0)
+  const words_two = extractTargetLineWords(elements, 1)
+  const words_three = extractTargetLineWords(elements, 2)
+  const words_four = extractTargetLineWords(elements, 3)
+  const words_five = extractTargetLineWords(elements, 4)
+  const lines: Lines = {
+    one: words_one,
+    two: words_two,
+    three: words_three,
+    four: words_four,
+    five: words_five
   }
-  return newString
+  return lines
+}
+
+function extractTargetLineWords(elements: WordPanelElement[], line: number) {
+  return elements.filter(element => {
+    return element.line === line
+  })
 }
 
 //入れ替えたテキストを合体

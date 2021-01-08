@@ -4,7 +4,7 @@ import { WordPanelElement } from '../../types/editor'
 
 const Panel = styled.div`
   display: inline-block;
-  width: 100%;
+  width: 40px;
   height: 100%;
   padding: 10px;
   border: 1px solid black;
