@@ -1,5 +1,4 @@
-import React from "react"
-import { EditAnagramRepository } from "../repositories/edit_anagram_repository"
+import React, { useEffect, useState } from "react"
 import styled from "styled-components"
 import { Editor } from "../components/editor/editor"
 
@@ -18,7 +17,7 @@ const PanelBoard = styled.div`
   height: ${panelHeight * verticalLength + 1}px;
   border: 1px solid orange;
 `
-const PanelBoardBackgroundWrapper = styled.div`
+const PanelBoardBackground = styled.div`
   position: absolute;
   width: ${panelWidth * horizontanLength + 1}px;
   height: ${panelHeight * verticalLength + 1}px;
@@ -28,34 +27,40 @@ const PanelBoardBackgroundWrapper = styled.div`
   background-size: ${panelWidth}px ${panelHeight}px;
 `
 
-const PanelBoardBackground = styled.div`
-  width: ${panelWidth}px;
-  height: ${panelHeight}px;
-  border-right: 1px solid blue;
-  border-bottom: 1px solid blue;
-  box-sizing: border-box;
+const ThemeInput = styled.input`
+  width:50%;
+`
+const ThemeSetBtn = styled.button`
+
 `
 export const Edit: React.FC = () => {
-  const repository = new EditAnagramRepository()
-  const info = repository.get()
+  const [theme, setTheme] = useState("")
+  const [themeValue, setThemeValue] = useState("")
   const editorConf = {
     boxesPerRow: 20,
     rowHeight: 50,
     style: { height: "50px"}
   }
-  const PanelBoardBackgrounds = [];
-  for (let i = 0; i < verticalLength * horizontanLength; i++) {
-    PanelBoardBackgrounds.push(<><PanelBoardBackground /></>)
+
+  const themeInputOnChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setThemeValue(event.target.value)
   }
+
+  const themeSetBtnOnClick = () => {
+    setTheme(themeValue)
+  }
+
   return(
     <>
-      <h1>お題：{info.theme_anagram}</h1>
+      <h1>お題：</h1>
+      <ThemeInput onChange={themeInputOnChange}/>
+      <ThemeSetBtn onClick={themeSetBtnOnClick}>
+        お題をボードにセットする
+      </ThemeSetBtn>
       <PanelBoard>
-        <PanelBoardBackgroundWrapper>
-          {/* {PanelBoardBackgrounds} */}
-        </PanelBoardBackgroundWrapper>
+        <PanelBoardBackground />
         <EditorWrpaeer>
-          <Editor text={info.theme_anagram} editorConf={editorConf} />
+          <Editor text={theme} editorConf={editorConf} />
         </EditorWrpaeer>
       </PanelBoard>
     </>

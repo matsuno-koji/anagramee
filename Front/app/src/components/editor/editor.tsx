@@ -29,6 +29,9 @@ export const Editor: React.FC<Props> = (props) => {
   const lines = initialize(mockProp.text, mockProp.horizontalLength, mockProp.verticalLength, )
   const [items, setItems] = useState(lines)
   const [previewText, setText] = useState(props.text.split("n"))
+  useEffect(() => {
+    setItems(lines)
+  }, [props.text])
 
   useEffect(() => {
     const text = joinText(items)
