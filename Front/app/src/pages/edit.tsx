@@ -1,26 +1,68 @@
-import React from "react"
-import { EditAnagramRepository } from "../repositories/edit_anagram_repository"
+import React, { useEffect, useState } from "react"
 import styled from "styled-components"
 import { Editor } from "../components/editor/editor"
 
+
+const panelHeight = 50
+const panelWidth = 40
+const horizontanLength = 20
+const verticalLength = 5
 const EditorWrpaeer = styled.div`
-  width: 400px;
+  position: absolute;
+  width: ${panelWidth * horizontanLength + 1}px;
+`
+const PanelBoard = styled.div`
+  position: relative;
+  width: ${panelWidth * horizontanLength + 1}px;
+  height: ${panelHeight * verticalLength + 1}px;
+  border: 1px solid orange;
+`
+const PanelBoardBackground = styled.div`
+  position: absolute;
+  width: ${panelWidth * horizontanLength + 1}px;
+  height: ${panelHeight * verticalLength + 1}px;
+  z-index: -1;
+  background-image: linear-gradient(#000 1px, transparent 0),
+                    linear-gradient(90deg, #000 1px, transparent 0);
+  background-size: ${panelWidth}px ${panelHeight}px;
 `
 
+const ThemeInput = styled.input`
+  width:50%;
+`
+const ThemeSetBtn = styled.button`
+
+`
 export const Edit: React.FC = () => {
-  const repository = new EditAnagramRepository()
-  const info = repository.get()
+  const [theme, setTheme] = useState("")
+  const [themeValue, setThemeValue] = useState("")
   const editorConf = {
-    boxesPerRow: 10,
+    boxesPerRow: 20,
     rowHeight: 50,
-    style: { height: "250px" }
+    style: { height: "50px"}
   }
+
+  const themeInputOnChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setThemeValue(event.target.value)
+  }
+
+  const themeSetBtnOnClick = () => {
+    setTheme(themeValue)
+  }
+
   return(
     <>
-      <h1>お題：{info.theme_anagram}</h1>
-      <EditorWrpaeer>
-        <Editor text={info.theme_anagram} editorConf={editorConf} />
-      </EditorWrpaeer>
+      <h1>お題：</h1>
+      <ThemeInput onChange={themeInputOnChange}/>
+      <ThemeSetBtn onClick={themeSetBtnOnClick}>
+        お題をボードにセットする
+      </ThemeSetBtn>
+      <PanelBoard>
+        <PanelBoardBackground />
+        <EditorWrpaeer>
+          <Editor text={theme} editorConf={editorConf} />
+        </EditorWrpaeer>
+      </PanelBoard>
     </>
   )
 }

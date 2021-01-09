@@ -8,7 +8,7 @@ export class EditAnagramRepository {
    */
   public get() {
     return {
-      theme_anagram: "いろはにほへとちりぬるを"
+      theme_anagram: "やられたらやりかえすばいがえしだ！"
     }
   }
 }
