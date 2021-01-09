@@ -1,7 +1,8 @@
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import { WordPanel } from "./wordpanel"
 import { WordPanelElement } from "../../types/editor"
 import { Preview } from "../editor/preview"
+
 import {
   GridContextProvider,
   GridDropZone,
@@ -24,9 +25,15 @@ interface Lines {
 }
 
 export const Editor: React.FC<Props> = (props) => {
-  const lines = initialize(props.text, props.editorConf.boxesPerRow)
+  const mockProp = {text: props.text, verticalLength: 5, horizontalLength: 20}
+  const lines = initialize(mockProp.text, mockProp.horizontalLength, mockProp.verticalLength, )
   const [items, setItems] = useState(lines)
-  const [text, setText] = useState(props.text)
+  const [previewText, setText] = useState(props.text.split("n"))
+
+  useEffect(() => {
+    const text = joinText(items)
+    setText(text)
+  }, [items])
 
   const onChange = (
     sourceId: string,
@@ -41,103 +48,70 @@ export const Editor: React.FC<Props> = (props) => {
         sourceIndex,
         targetIndex
       );
-      return setItems({
+      setItems({
         ...items,
         [sourceId]: result[0],
         [targetId]: result[1]
       })
+
+      return
     }
     const result = swap(items[sourceId], sourceIndex, targetIndex)
     return setItems({
       ...items,
       [sourceId]: result
     })
-    // setText(joinText(nextState))
   }
 
   return(
     <>
       <GridContextProvider onChange={onChange}>
-        <GridDropZone 
-          id='one'
-          {...props.editorConf}
-        >
-          {items.one.map((item) => (
-            <GridItem key={item.key}>
-              <WordPanel element={item} />
-            </GridItem>
-          ))}
-        </GridDropZone>
-        <GridDropZone 
-          id='two'
-          {...props.editorConf}
-        >
-          {items.two.map((item) => (
-            <GridItem key={item.key}>
-              <WordPanel element={item} />
-            </GridItem>
-          ))}
-        </GridDropZone>
-        <GridDropZone 
-          id='three'
-          {...props.editorConf}
-        >
-          {items.three.map((item) => (
-            <GridItem key={item.key}>
-              <WordPanel element={item} />
-            </GridItem>
-          ))}
-        </GridDropZone>
-        <GridDropZone 
-          id='four'
-          {...props.editorConf}
-        >
-          {items.four.map((item) => (
-            <GridItem key={item.key}>
-              <WordPanel element={item} />
-            </GridItem>
-          ))}
-        </GridDropZone>
-        <GridDropZone 
-          id='five'
-          {...props.editorConf}
-        >
-          {items.five.map((item) => (
-            <GridItem key={item.key}>
-              <WordPanel element={item} />
-            </GridItem>
-          ))}
-        </GridDropZone>
+        {Object.keys(items).map((key) => (
+            <GridDropZone
+              key={key}
+              id={key}
+              {...props.editorConf}
+            >
+              {items[key].map((item) => (
+                <GridItem key={item.key}>
+                  <WordPanel element={item} />
+                </GridItem>
+              ))}
+            </GridDropZone>
+        ))}
       </GridContextProvider>
-      <Preview text={text} boxesPerRow={props.editorConf.boxesPerRow} />
+      <Preview lines={previewText} />
     </>
   )
 }
 
 //文章の初期化
-function initialize(text: string, boxesPerRow: number): Lines {
+function initialize(text: string, horizontalLength: number, verticalLength: number): Lines {
   const words = text.split("")
-  const elements = words.map( (word, index) => {
-    const line = Math.floor(index / boxesPerRow)
+  const elements: WordPanelElement[] = words.map( (word, index) => {
+    const line = Math.floor(index / horizontalLength)
     return {key: `${index}`, word: `${word}`, line: line}
   })
-  const lines = devideLine(elements)
+  const lines = devideLine(elements, verticalLength)
+  lines['layoutItems'] = getLayoutItems(5)
   return lines
 }
 
+//レイアウト用アイテムの取得
+function getLayoutItems(lfNum: number): WordPanelElement[] {
+  let preItem = "n".repeat(lfNum)
+  const splitItems = preItem.split("")
+  const elements = splitItems.map((item, index) => {
+    return {key: `layout_item_${index}`, word: `${item}`, line: 1}
+  })
+  return elements
+}
+
 //ラインでグループ分け
-function devideLine(elements: WordPanelElement[]): Lines {
-  const words_one = extractTargetLineWords(elements, 0)
-  const words_two = extractTargetLineWords(elements, 1)
-  const words_three = extractTargetLineWords(elements, 2)
-  const words_four = extractTargetLineWords(elements, 3)
-  const words_five = extractTargetLineWords(elements, 4)
-  const lines: Lines = {
-    one: words_one,
-    two: words_two,
-    three: words_three,
-    four: words_four,
-    five: words_five
+function devideLine(elements: WordPanelElement[], verticalLength: number): Lines {
+  const lines: Lines = {}
+  for(let lineNum = 0; lineNum < verticalLength; lineNum++) {
+    lines[`line_${lineNum}`] = extractTargetLineWords(elements, lineNum)
   }
   return lines
 }
@@ -149,10 +123,17 @@ function extractTargetLineWords(elements: WordPanelElement[], line: number) {
 }
 
 //入れ替えたテキストを合体
-function joinText(elements: WordPanelElement[]): string {
+function joinText(elements: Lines): string[] {
   let text = ""
-  elements.map((element) => (
-    text = text + element.word
-  ))
-  return text
+  Object.keys(elements).map( (key) => {
+    if(key === 'layoutItems') {
+      return
+    }
+    elements[key].map( element => (
+      text = text + element.word
+    ))
+  })
+  //TODO:改行文字は共通化すべき
+  const textItems = text.split('n')
+  return textItems
 }

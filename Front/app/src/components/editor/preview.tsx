@@ -1,39 +1,21 @@
 import React from "react"
+import styled from "styled-components"
 
 interface Props {
-  text: string
-  boxesPerRow: number
+  lines: string[]
 }
 
-interface textElement {
-  lineBreak: boolean
-  text: string
-}
+const Oneline = styled.p`
+  margin: 0;
+  padding: 0;
+`
 
 export const Preview: React.FC<Props> = (props) => {
-  const previewTextElements = formatText(props.text, props.boxesPerRow)
   return (
     <>
-      {previewTextElements.map((element) => {
-        const lineBreak = element.lineBreak ? <br /> : ""
-        return <>{element.text}{lineBreak}</>
+      {props.lines.map((line, index) => {
+        return <Oneline key={`preview_text_line_${index}`}>{line}</Oneline>
       })}
     </>
   )
 }
-
-function formatText(text: string, boxesPerRow: number): textElement[] {
-  const length = text.length
-  const cutNum = Math.ceil(length / boxesPerRow)
-  const lines = []
-  for (let num = 0; num < cutNum; num++) {
-    lines.push(text.substr(num * boxesPerRow, boxesPerRow))
-  }
-  const textElements = lines.map((line) => {
-    const trimedLine = line.trim()
-    const lineBreak = trimedLine.length < boxesPerRow && trimedLine.length >= 1
-    const textElment: textElement = {lineBreak: lineBreak, text: trimedLine}
-    return textElment
-  })
-  return textElements
-} 
