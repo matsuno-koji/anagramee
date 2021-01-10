@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react"
 import { WordPanel } from "./wordpanel"
 import { WordPanelElement } from "../../types/editor"
 import { Preview } from "../editor/preview"
-
+import styled from "styled-components"
 import {
   GridContextProvider,
   GridDropZone,
@@ -11,8 +11,18 @@ import {
   move
 } from "react-grid-dnd"
 
+const Spacer = styled.div`
+  width: 100%;
+  height: 16px;
+`
 interface Props {
-  text: string
+  theme: string
+  panelConf: {
+    height: number,
+    width: number,
+    rowLength: number,
+    verticalLength: number
+  }
   editorConf: {
     boxesPerRow: number
     rowHeight: number
@@ -25,13 +35,12 @@ interface Lines {
 }
 
 export const Editor: React.FC<Props> = (props) => {
-  const mockProp = {text: props.text, verticalLength: 5, horizontalLength: 20}
-  const lines = initialize(mockProp.text, mockProp.horizontalLength, mockProp.verticalLength, )
+  const lines = initialize(props.theme, props.panelConf.rowLength, props.panelConf.verticalLength)
   const [items, setItems] = useState(lines)
-  const [previewText, setText] = useState(props.text.split("n"))
+  const [previewText, setText] = useState(props.theme.split("n"))
   useEffect(() => {
     setItems(lines)
-  }, [props.text])
+  }, [props.theme])
 
   useEffect(() => {
     const text = joinText(items)
@@ -83,6 +92,7 @@ export const Editor: React.FC<Props> = (props) => {
             </GridDropZone>
         ))}
       </GridContextProvider>
+      <Spacer/>
       <Preview lines={previewText} />
     </>
   )
@@ -93,7 +103,7 @@ function initialize(text: string, horizontalLength: number, verticalLength: numb
   const words = text.split("")
   const elements: WordPanelElement[] = words.map( (word, index) => {
     const line = Math.floor(index / horizontalLength)
-    return {key: `${index}`, word: `${word}`, line: line}
+    return {key: `${index}`, word: `${word}`, line: line, isLayout: false}
   })
   const lines = devideLine(elements, verticalLength)
   lines['layoutItems'] = getLayoutItems(5)
@@ -105,7 +115,7 @@ function getLayoutItems(lfNum: number): WordPanelElement[] {
   let preItem = "n".repeat(lfNum)
   const splitItems = preItem.split("")
   const elements = splitItems.map((item, index) => {
-    return {key: `layout_item_${index}`, word: `${item}`, line: 1}
+    return {key: `layout_item_${index}`, word: `${item}`, line: 1, isLayout: true}
   })
   return elements
 }
