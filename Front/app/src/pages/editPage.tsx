@@ -21,7 +21,7 @@ const PanelConf = {
 
 const EditorWrpaeer = styled.div`
   position: absolute;
-  width: ${PanelConf.width * PanelConf.rowLength + 1}px;
+  width: ${PanelConf.width * PanelConf.rowLength + 1 + PanelConf.width}px;
 `
 const PanelBoard = styled.div`
   position: relative;
@@ -32,11 +32,24 @@ const PanelBoard = styled.div`
 const PanelBoardBackground = styled.div`
   position: absolute;
   width: ${PanelConf.width * PanelConf.rowLength + 1}px;
-  height: ${PanelConf.height * PanelConf.verticalLength + 1 + PanelConf.height}px;
+  height: ${PanelConf.height * PanelConf.verticalLength + 1}px;
   z-index: -1;
   background-image: linear-gradient(#000 1px, transparent 0),
                     linear-gradient(90deg, #000 1px, transparent 0);
   background-size: ${PanelConf.width}px ${PanelConf.height}px;
+`
+
+const LayoutItemBoardBackground = styled.div`
+  position: absolute;
+  top: ${PanelConf.height * PanelConf.verticalLength}px;
+  left: 0;
+  width: ${PanelConf.width * PanelConf.rowLength + 1}px;
+  height: ${PanelConf.height + 1}px;
+  z-index: -1;
+  background-image: linear-gradient(#000 1px, transparent 0),
+  linear-gradient(90deg, #000 1px, transparent 0);
+  background-size: ${PanelConf.width}px ${PanelConf.height}px;
+  background-color: #bdbdbd;
 `
 const BtnWrapper = styled.div`
   display: flex;
@@ -60,10 +73,11 @@ const ContentWrapper = styled.div`
 `
 
 export function EditPage() {
-  const [theme, setTheme] = useState("")
-  const [themeValue, setThemeValue] = useState("")
+  const defaultTheme = "お題をセットしてアナグラムを作りましょう！"
+  const [theme, setTheme] = useState(defaultTheme)
+  const [themeValue, setThemeValue] = useState(defaultTheme)
   const editorConf = {
-    boxesPerRow: PanelConf.rowLength,
+    boxesPerRow: PanelConf.rowLength + 1,
     rowHeight: PanelConf.height,
     style: { height: `${PanelConf.height}px`}
   }
@@ -108,6 +122,7 @@ export function EditPage() {
           <PanelBoardContainer>
             <PanelBoard>
               <PanelBoardBackground />
+              <LayoutItemBoardBackground />
               <EditorWrpaeer>
                 <Editor theme={theme} panelConf={PanelConf} editorConf={editorConf} />
               </EditorWrpaeer>
