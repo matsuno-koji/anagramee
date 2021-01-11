@@ -10,6 +10,7 @@ import {
   swap,
   move
 } from "react-grid-dnd"
+import { keys } from "@material-ui/core/styles/createBreakpoints"
 
 const Spacer = styled.div`
   width: 100%;
@@ -30,8 +31,14 @@ interface Props {
   }
 }
 
+interface Line {
+  index: number,
+  elements: WordPanelElement[]
+  isLayout: boolean,
+}
+
 interface Lines {
-  [index: string]: WordPanelElement[]
+  [id: string]: Line
 }
 
 export const Editor: React.FC<Props> = (props) => {
@@ -55,24 +62,27 @@ export const Editor: React.FC<Props> = (props) => {
   ) => {
     if (targetId) {
       const result = move(
-        items[sourceId],
-        items[targetId],
+        items[sourceId].elements,
+        items[targetId].elements,
         sourceIndex,
         targetIndex
       );
-      setItems({
-        ...items,
-        [sourceId]: result[0],
-        [targetId]: result[1]
-      })
-
+      items[sourceId].elements = result[0]
+      items[targetId].elements = result[1]
+      if (isOutOfFrame(items, props.editorConf.boxesPerRow)) {
+        return
+      }
+      if (isLineBreakRequired(items, props.editorConf.boxesPerRow)) {
+        const lineBrokenItems = lineBreak(items, props.editorConf.boxesPerRow)
+        setItems({...lineBrokenItems})
+        return
+      }
+      setItems({...items})
       return
     }
-    const result = swap(items[sourceId], sourceIndex, targetIndex)
-    return setItems({
-      ...items,
-      [sourceId]: result
-    })
+    const result = swap(items[sourceId].elements, sourceIndex, targetIndex)
+    items[sourceId].elements = result
+    return setItems({...items})
   }
 
   return(
@@ -84,7 +94,7 @@ export const Editor: React.FC<Props> = (props) => {
               id={key}
               {...props.editorConf}
             >
-              {items[key].map((item) => (
+              {items[key].elements.map((item) => (
                 <GridItem key={item.key}>
                   <WordPanel element={item} />
                 </GridItem>
@@ -106,7 +116,7 @@ function initialize(text: string, horizontalLength: number, verticalLength: numb
     return {key: `${index}`, word: `${word}`, line: line, isLayout: false}
   })
   const lines = devideLine(elements, verticalLength)
-  lines['layoutItems'] = getLayoutItems(5)
+  lines['layoutItems'] = {index: Object.keys(lines).length + 1, elements: getLayoutItems(5), isLayout: true}
   return lines
 }
 
@@ -124,7 +134,7 @@ function getLayoutItems(lfNum: number): WordPanelElement[] {
 function devideLine(elements: WordPanelElement[], verticalLength: number): Lines {
   const lines: Lines = {}
   for(let lineNum = 0; lineNum < verticalLength; lineNum++) {
-    lines[`line_${lineNum}`] = extractTargetLineWords(elements, lineNum)
+    lines[`line_${lineNum}`] = {index: lineNum, elements: extractTargetLineWords(elements, lineNum), isLayout: false}
   }
   return lines
 }
@@ -136,17 +146,53 @@ function extractTargetLineWords(elements: WordPanelElement[], line: number) {
 }
 
 //入れ替えたテキストを合体
-function joinText(elements: Lines): string[] {
+function joinText(lines: Lines): string[] {
   let text = ""
-  Object.keys(elements).map( (key) => {
-    if(key === 'layoutItems') {
+  Object.keys(lines).map( (key) => {
+    if(lines[key].isLayout) {
       return
     }
-    elements[key].map( element => (
+    lines[key].elements.map( element => (
       text = text + element.word
     ))
   })
   //TODO:改行文字は共通化すべき
   const textItems = text.split('n')
   return textItems
+}
+
+function isOutOfFrame(lines: Lines, boxesPerRow: number): boolean {
+  const keys = Object.keys(lines)
+  const lastLineIndex = keys.length
+  let result = false
+  keys.map((key) => {
+    if(lines[key].index === lastLineIndex) {
+      result = lines[key].elements.length >= boxesPerRow
+    }
+  })
+  return result
+}
+
+function isLineBreakRequired(lines: Lines, boxesPerRow: number): boolean {
+  let result = false
+  Object.keys(lines).map((key) => {
+    if (lines[key].elements.length >= boxesPerRow) {
+      result = true
+    }
+  })
+  return result
+}
+
+function lineBreak(lines: Lines, boxesPerRow: number): Lines {
+  const keys = Object.keys(lines)
+  keys.map((key, index) => {
+      if (lines[key].elements.length >= boxesPerRow) {
+        const lastOfLineElement = lines[key].elements.pop()
+        if (lastOfLineElement === undefined) {
+          return
+        }
+        lines[keys[index + 1]].elements.unshift(lastOfLineElement)
+      }
+  })
+  return lines
 }
